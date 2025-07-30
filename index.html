@@ -2,40 +2,48 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>釋放壓力能量站</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f0f4f8;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(to bottom, #e0f7fa, #fce4ec);
       text-align: center;
-      padding: 50px;
+      padding: 50px 20px;
+      margin: 0;
     }
     h1 {
       margin-bottom: 30px;
+      color: #333;
     }
     #releaseBtn {
       padding: 20px 40px;
       font-size: 24px;
-      background-color: #4caf50;
+      background-color: #ff6f61;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 15px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      transition: transform 0.2s, background-color 0.3s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
     #releaseBtn:hover {
-      background-color: #45a049;
+      background-color: #e55a4f;
+      transform: scale(1.05);
     }
     #counter {
       font-size: 28px;
       margin: 30px 0;
+      color: #444;
     }
     #energyBarContainer {
-      width: 60%;
+      width: 80%;
+      max-width: 400px;
       margin: 0 auto 20px;
       background: #ddd;
       border-radius: 20px;
       overflow: hidden;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
     }
     #energyBar {
       height: 30px;
@@ -56,36 +64,41 @@
     <div id="energyBar"></div>
   </div>
 
-  <!-- 敲木魚音效 -->
   <audio id="woodFishSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_41d48b3408.mp3" preload="auto"></audio>
 
   <script>
-    let count = localStorage.getItem('clickCount') ? parseInt(localStorage.getItem('clickCount')) : 0;
+    document.addEventListener("DOMContentLoaded", function() {
+      let count = localStorage.getItem('clickCount') ? parseInt(localStorage.getItem('clickCount')) : 0;
 
-    const counterDisplay = document.getElementById('counter');
-    const energyBar = document.getElementById('energyBar');
-    const btn = document.getElementById('releaseBtn');
-    const woodFish = document.getElementById('woodFishSound');
+      const counterDisplay = document.getElementById('counter');
+      const energyBar = document.getElementById('energyBar');
+      const btn = document.getElementById('releaseBtn');
+      const woodFish = document.getElementById('woodFishSound');
 
-    function updateDisplay() {
-      counterDisplay.textContent = `已釋放壓力：${count} 次`;
-      const percent = Math.min(100, (count % 20) * 5);
-      energyBar.style.width = percent + '%';
+      function updateDisplay() {
+        counterDisplay.textContent = `已釋放壓力：${count} 次`;
+        const percent = Math.min(100, (count % 20) * 5);
+        energyBar.style.width = percent + '%';
 
-      if (percent === 100) {
-        setTimeout(() => alert(\"✨ 能量條滿囉！給自己一個擁抱 ✨\"), 200);
+        if (percent === 100) {
+          setTimeout(() => alert("✨ 能量條滿囉！給自己一個擁抱 ✨"), 200);
+        }
       }
-    }
 
-    btn.addEventListener('click', () => {
-      count++;
-      localStorage.setItem('clickCount', count);
+      btn.addEventListener('click', () => {
+        count++;
+        localStorage.setItem('clickCount', count);
+        updateDisplay();
+        try {
+          woodFish.currentTime = 0;
+          woodFish.play();
+        } catch (e) {
+          console.log("音效播放錯誤：", e);
+        }
+      });
+
       updateDisplay();
-      woodFish.currentTime = 0;
-      woodFish.play();
     });
-
-    updateDisplay();
   </script>
 </body>
 </html>
