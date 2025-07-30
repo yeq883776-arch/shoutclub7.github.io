@@ -75,7 +75,7 @@
   <canvas class="fireworks"></canvas>
 
   <script>
-    let count = localStorage.getItem('clickCount') ? parseInt(localStorage.getItem('clickCount')) : 0;
+    let count = 0;
 
     const counterDisplay = document.getElementById('counter');
     const energyBar = document.getElementById('energyBar');
@@ -132,7 +132,6 @@
 
     btn.addEventListener('click', () => {
       count++;
-      localStorage.setItem('clickCount', count);
       updateDisplay();
 
       try {
