@@ -14,26 +14,23 @@
       filter: grayscale(100%);
     }
     h1 {
-      margin-top: 20vh;
-      font-size: 2.5rem;
+      margin-top: 60px;
+      font-size: 2em;
     }
     #clickCount, #totalCount {
-      font-size: 1.2rem;
-      margin: 0.5em;
+      font-size: 1.5em;
+      margin: 10px;
     }
-    #btn {
-      font-size: 2rem;
-      padding: 1em 2em;
-      margin-top: 1em;
+    button {
+      font-size: 2em;
+      padding: 20px 40px;
+      margin: 30px auto;
+      display: block;
       cursor: pointer;
-      border: none;
-      background-color: #000;
-      color: white;
     }
     canvas {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       pointer-events: none;
       z-index: 9999;
     }
@@ -41,79 +38,87 @@
 </head>
 <body>
   <h1>釋放你的壓力</h1>
-  <div id="clickCount">這次點擊：0 次</div>
-  <div id="totalCount">歷史總點擊：0 次</div>
-  <button id="btn">點我發洩！</button>
+  <div id="totalCount">歷史累積點擊：0</div>
+  <div id="clickCount">目前點擊：0</div>
+  <button id="clickBtn">釋放一下</button>
+
   <canvas id="fireworks"></canvas>
-  <audio id="clickSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_78bce67e33.mp3?filename=pop-94319.mp3" preload="auto"></audio>
+  <audio id="clickSound" preload="auto" src="https://freesound.org/data/previews/341/341695_6262075-lq.mp3"></audio>
 
   <script>
     let count = 0;
-    let total = parseInt(localStorage.getItem('totalCount') || '0');
-    const btn = document.getElementById('btn');
-    const clickCount = document.getElementById('clickCount');
-    const totalCount = document.getElementById('totalCount');
-    const sound = document.getElementById('clickSound');
+    let total = localStorage.getItem("totalClicks") || 0;
+    document.getElementById("totalCount").innerText = "歷史累積點擊：" + total;
+    const btn = document.getElementById("clickBtn");
+    const clickDisplay = document.getElementById("clickCount");
+    const sound = document.getElementById("clickSound");
 
-    // 更新畫面
-    function updateUI() {
-      clickCount.innerText = `這次點擊：${count} 次`;
-      totalCount.innerText = `歷史總點擊：${total} 次`;
-    }
+    // 彩色煙火動畫
+    const canvas = document.getElementById("fireworks");
+    const ctx = canvas.getContext("2d");
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
 
-    // 煙火效果
-    function launchFireworks() {
-      const canvas = document.getElementById('fireworks');
-      const ctx = canvas.getContext('2d');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-
-      const fireworks = [];
-      for (let i = 0; i < 50; i++) {
-        fireworks.push({
-          x: canvas.width / 2,
-          y: canvas.height / 2,
-          radius: Math.random() * 3 + 2,
-          color: `hsl(${Math.random() * 360}, 100%, 60%)`,
-          speedX: Math.random() * 6 - 3,
-          speedY: Math.random() * 6 - 3,
-          alpha: 1
-        });
-      }
-
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        fireworks.forEach(f => {
-          f.x += f.speedX;
-          f.y += f.speedY;
-          f.alpha -= 0.02;
-          ctx.beginPath();
-          ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
-          ctx.fillStyle = f.color;
-          ctx.globalAlpha = f.alpha;
-          ctx.fill();
-        });
-        ctx.globalAlpha = 1;
-        fireworks.filter(f => f.alpha > 0).length && requestAnimationFrame(animate);
-      }
-
-      animate();
-    }
-
-    // 點擊事件
-    btn.addEventListener('click', () => {
-      count++;
-      total++;
-      sound.currentTime = 0;
-      sound.play();
-      updateUI();
-      if (count % 100 === 0) {
-        launchFireworks();
-      }
-      localStorage.setItem('totalCount', total);
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
     });
 
-    updateUI();
+    const fireworks = [];
+
+    function launchFirework() {
+      for (let i = 0; i < 80; i++) {
+        fireworks.push({
+          x: width / 2,
+          y: height / 2,
+          angle: Math.random() * 2 * Math.PI,
+          speed: Math.random() * 6 + 2,
+          radius: Math.random() * 4 + 1,
+          alpha: 1,
+          color: `hsl(${Math.random() * 360}, 100%, 50%)`
+        });
+      }
+    }
+
+    function animateFireworks() {
+      ctx.clearRect(0, 0, width, height);
+      fireworks.forEach(fw => {
+        fw.x += Math.cos(fw.angle) * fw.speed;
+        fw.y += Math.sin(fw.angle) * fw.speed;
+        fw.alpha -= 0.015;
+        ctx.beginPath();
+        ctx.arc(fw.x, fw.y, fw.radius, 0, 2 * Math.PI);
+        ctx.fillStyle = fw.color;
+        ctx.globalAlpha = fw.alpha;
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+      for (let i = fireworks.length - 1; i >= 0; i--) {
+        if (fireworks[i].alpha <= 0) {
+          fireworks.splice(i, 1);
+        }
+      }
+      requestAnimationFrame(animateFireworks);
+    }
+
+    animateFireworks();
+
+    btn.addEventListener("click", () => {
+      // 播放聲音（不延遲）
+      sound.currentTime = 0;
+      sound.play();
+
+      count++;
+      total++;
+      clickDisplay.innerText = "目前點擊：" + count;
+      document.getElementById("totalCount").innerText = "歷史累積點擊：" + total;
+      localStorage.setItem("totalClicks", total);
+
+      if (count % 100 === 0) {
+        launchFirework();
+        document.body.style.filter = "none"; // 解除黑白
+      }
+    });
   </script>
 </body>
 </html>
