@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>釋放你的壓力</title>
   <style>
     html, body {
@@ -43,7 +43,9 @@
   <button id="clickBtn">釋放一下</button>
 
   <canvas id="fireworks"></canvas>
-  <audio id="clickSound" preload="auto" src="https://freesound.org/data/previews/341/341695_6262075-lq.mp3"></audio>
+  <audio id="clickSound" preload="auto">
+    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_b5b9261b37.mp3" type="audio/mp3">
+  </audio>
 
   <script>
     let count = 0;
@@ -53,7 +55,6 @@
     const clickDisplay = document.getElementById("clickCount");
     const sound = document.getElementById("clickSound");
 
-    // 彩色煙火動畫
     const canvas = document.getElementById("fireworks");
     const ctx = canvas.getContext("2d");
     let width = canvas.width = window.innerWidth;
@@ -67,7 +68,7 @@
     const fireworks = [];
 
     function launchFirework() {
-      for (let i = 0; i < 80; i++) {
+      for (let i = 0; i < 100; i++) {
         fireworks.push({
           x: width / 2,
           y: height / 2,
@@ -82,16 +83,16 @@
 
     function animateFireworks() {
       ctx.clearRect(0, 0, width, height);
-      fireworks.forEach(fw => {
+      for (let fw of fireworks) {
         fw.x += Math.cos(fw.angle) * fw.speed;
         fw.y += Math.sin(fw.angle) * fw.speed;
-        fw.alpha -= 0.015;
+        fw.alpha -= 0.01;
         ctx.beginPath();
         ctx.arc(fw.x, fw.y, fw.radius, 0, 2 * Math.PI);
         ctx.fillStyle = fw.color;
         ctx.globalAlpha = fw.alpha;
         ctx.fill();
-      });
+      }
       ctx.globalAlpha = 1;
       for (let i = fireworks.length - 1; i >= 0; i--) {
         if (fireworks[i].alpha <= 0) {
@@ -104,9 +105,11 @@
     animateFireworks();
 
     btn.addEventListener("click", () => {
-      // 播放聲音（不延遲）
-      sound.currentTime = 0;
-      sound.play();
+      try {
+        sound.pause();
+        sound.currentTime = 0;
+        sound.play();
+      } catch (e) {}
 
       count++;
       total++;
@@ -116,7 +119,7 @@
 
       if (count % 100 === 0) {
         launchFirework();
-        document.body.style.filter = "none"; // 解除黑白
+        document.body.style.filter = "none";
       }
     });
   </script>
