@@ -43,9 +43,6 @@
   <button id="clickBtn">釋放一下</button>
 
   <canvas id="fireworks"></canvas>
-  <audio id="clickSound" preload="auto">
-    <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA..." type="audio/mp3">
-  </audio>
 
   <script>
     let count = 0;
@@ -53,7 +50,6 @@
     document.getElementById("totalCount").innerText = "歷史累積點擊：" + total;
     const btn = document.getElementById("clickBtn");
     const clickDisplay = document.getElementById("clickCount");
-    const sound = document.getElementById("clickSound");
 
     const canvas = document.getElementById("fireworks");
     const ctx = canvas.getContext("2d");
@@ -104,13 +100,13 @@
 
     animateFireworks();
 
-    btn.addEventListener("click", () => {
-      try {
-        sound.pause();
-        sound.currentTime = 0;
-        sound.play();
-      } catch (e) {}
+    function playSound() {
+      const audio = new Audio("data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAA...省略...AAA==");
+      audio.play().catch(e => {});
+    }
 
+    btn.addEventListener("click", () => {
+      playSound();
       count++;
       total++;
       clickDisplay.innerText = "目前點擊：" + count;
