@@ -27,6 +27,9 @@
 
     #cccImg {
       width: 300px;
+      height: 300px;
+      object-fit: cover; /* 正方形裁切 */
+      border-radius: 20px;
       margin: 20px 0;
       transition: transform 0.2s ease;
     }
@@ -47,11 +50,12 @@
       font-size: 2rem;
       padding: 15px 30px;
       margin-top: 10px;
-      background-color: #ff4444;
-      color: white;
-      border: none;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #ff4444;
+      border: 2px solid #ff4444;
       border-radius: 10px;
       cursor: pointer;
+      backdrop-filter: blur(4px);
     }
 
     canvas {
@@ -72,7 +76,7 @@
 
   <button id="shoutBtn">吶喊</button>
 
-  <audio id="shoutSound" src="cow.mp3" preload="auto"></audio>
+  <audio id="shoutSound" src="huh.mp3" preload="auto"></audio>
   <canvas id="fireworksCanvas"></canvas>
 
   <script>
@@ -93,10 +97,8 @@
     }
 
     function playSound() {
-      shoutSound.pause();
-      shoutSound.currentTime = 0;
-      shoutSound.play();
-      setTimeout(() => shoutSound.pause(), 500);
+      const clone = shoutSound.cloneNode(); // 保證每次都播放一次完整音效
+      clone.play();
     }
 
     function triggerShake() {
@@ -136,6 +138,7 @@
         ctx.globalAlpha = 1;
         if (particles.every(p => p.alpha <= 0)) {
           clearInterval(interval);
+          ctx.clearRect(0, 0, canvas.width, canvas.height); // 清除畫面
         }
       }, 16);
     }
