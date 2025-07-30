@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>釋放壓力能量站</title>
   <style>
-    body {
+    html, body {
+      margin: 0;
+      padding: 0;
       font-family: "Segoe UI", sans-serif;
+      text-align: center;
       background: #fff;
       color: #000;
       filter: grayscale(100%);
-      text-align: center;
-      padding: 50px 20px;
-      margin: 0;
     }
     h1 {
-      margin-bottom: 30px;
+      margin-top: 50px;
     }
     #releaseBtn {
       padding: 20px 40px;
@@ -25,8 +25,8 @@
       border: none;
       border-radius: 15px;
       cursor: pointer;
-      transition: transform 0.2s, background-color 0.3s;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: 0.2s;
+      margin-top: 30px;
     }
     #releaseBtn:hover {
       background-color: #222;
@@ -43,7 +43,6 @@
       background: #ccc;
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
     }
     #energyBar {
       height: 30px;
@@ -51,15 +50,12 @@
       background: linear-gradient(to right, #555, #999);
       transition: width 0.3s;
     }
-    #fireworks {
-      display: none;
+    canvas.fireworks {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 999;
+      pointer-events: none;
+      z-index: 9999;
     }
   </style>
 </head>
@@ -74,55 +70,79 @@
     <div id="energyBar"></div>
   </div>
 
-  <!-- 音效 -->
   <audio id="woodFishSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_41d48b3408.mp3" preload="auto"></audio>
-  <audio id="clickSound" src="https://cdn.pixabay.com/audio/2022/03/31/audio_d57d66dc90.mp3" preload="auto"></audio>
 
-  <!-- 煙火動畫 -->
-  <div id="fireworks"></div>
+  <canvas class="fireworks"></canvas>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      let count = localStorage.getItem('clickCount') ? parseInt(localStorage.getItem('clickCount')) : 0;
+    let count = localStorage.getItem('clickCount') ? parseInt(localStorage.getItem('clickCount')) : 0;
 
-      const counterDisplay = document.getElementById('counter');
-      const energyBar = document.getElementById('energyBar');
-      const btn = document.getElementById('releaseBtn');
-      const woodFish = document.getElementById('woodFishSound');
-      const clickSound = document.getElementById('clickSound');
-      const fireworks = document.getElementById('fireworks');
+    const counterDisplay = document.getElementById('counter');
+    const energyBar = document.getElementById('energyBar');
+    const btn = document.getElementById('releaseBtn');
+    const woodFish = document.getElementById('woodFishSound');
+    const canvas = document.querySelector('.fireworks');
+    const ctx = canvas.getContext('2d');
+    let fireworks = [];
 
-      function updateDisplay() {
-        counterDisplay.textContent = `已釋放壓力：${count} 次`;
-        const percent = Math.min(100, (count % 20) * 5);
-        energyBar.style.width = percent + '%';
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-        if (count === 100) {
-          document.body.style.filter = 'none';
-          fireworks.style.display = 'block';
-          fireworks.innerHTML = '<iframe src="https://embed.lottiefiles.com/animation/43361" width="100%" height="100%" frameborder="0"></iframe>';
-          setTimeout(() => {
-            fireworks.style.display = 'none';
-          }, 6000);
-        }
+    function updateDisplay() {
+      counterDisplay.textContent = `已釋放壓力：${count} 次`;
+      const percent = Math.min(100, (count % 20) * 5);
+      energyBar.style.width = percent + '%';
+    }
+
+    function playFireworks() {
+      document.body.style.filter = 'none';
+      for (let i = 0; i < 60; i++) {
+        fireworks.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          angle: Math.random() * 2 * Math.PI,
+          speed: Math.random() * 5 + 2,
+          radius: 2 + Math.random() * 2,
+          life: 100,
+          color: `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`
+        });
       }
+    }
 
-      btn.addEventListener('click', () => {
-        count++;
-        localStorage.setItem('clickCount', count);
-        updateDisplay();
-        try {
-          woodFish.currentTime = 0;
-          woodFish.play();
-          clickSound.currentTime = 0;
-          clickSound.play();
-        } catch (e) {
-          console.log("音效播放錯誤：", e);
-        }
+    function drawFireworks() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      fireworks = fireworks.filter(f => f.life > 0);
+      fireworks.forEach(f => {
+        const vx = Math.cos(f.angle) * f.speed;
+        const vy = Math.sin(f.angle) * f.speed;
+        f.x += vx;
+        f.y += vy;
+        f.life -= 2;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.radius, 0, 2 * Math.PI);
+        ctx.fillStyle = f.color;
+        ctx.fill();
       });
+      if (fireworks.length > 0) requestAnimationFrame(drawFireworks);
+    }
 
+    btn.addEventListener('click', () => {
+      count++;
+      localStorage.setItem('clickCount', count);
       updateDisplay();
+      woodFish.currentTime = 0;
+      woodFish.play().catch(e => {});
+      if (count === 100) {
+        playFireworks();
+        drawFireworks();
+      }
     });
+
+    updateDisplay();
   </script>
 </body>
 </html>
