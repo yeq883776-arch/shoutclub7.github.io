@@ -4,104 +4,119 @@
   <meta charset="UTF-8" />
   <title>釋放你的壓力</title>
   <style>
-    html, body {
+    body {
       margin: 0;
       padding: 0;
-      font-family: "Segoe UI", sans-serif;
+      background: #000;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
       text-align: center;
-      background: #fff;
-      color: #000;
-      filter: grayscale(100%);
     }
     h1 {
-      font-size: 2.5em;
-      margin-top: 20vh;
+      font-size: 2.5rem;
+      margin-top: 2rem;
     }
-    #count {
-      font-size: 1.5em;
-      margin: 10px 0;
+    #counter, #total {
+      font-size: 1.5rem;
+      margin: 1rem;
+    }
+    button {
+      margin-top: 2rem;
+      font-size: 2rem;
+      padding: 1rem 2rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      background-color: #ff4444;
+      color: white;
     }
     canvas {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
       pointer-events: none;
-      z-index: 999;
     }
   </style>
 </head>
 <body>
   <h1>釋放你的壓力</h1>
-  <div id="count">點擊次數：0<br>歷史總計：0</div>
-
-  <audio id="sound" src="cow.mp3" preload="auto"></audio>
+  <div id="counter">目前聲浪：0</div>
+  <div id="total">全球累積聲浪：0</div>
+  <button id="shoutButton">吶喊</button>
   <canvas id="fireworks"></canvas>
+
+  <audio id="shoutSound" src="cow.mp3"></audio>
 
   <script>
     let count = 0;
-    let total = localStorage.getItem('totalCount') || 0;
-    const countDisplay = document.getElementById('count');
-    const sound = document.getElementById('sound');
+    let total = localStorage.getItem('shout_total') || 0;
 
-    countDisplay.innerHTML = `點擊次數：${count}<br>歷史總計：${total}`;
+    document.getElementById('total').innerText = '全球累積聲浪：' + total;
 
-    document.body.addEventListener('click', () => {
-      count++;
-      total++;
-      countDisplay.innerHTML = `點擊次數：${count}<br>歷史總計：${total}`;
-      localStorage.setItem('totalCount', total);
-
-      try {
-        sound.currentTime = 0;
-        sound.play();
-        setTimeout(() => {
-          sound.pause();
-          sound.currentTime = 0;
-        }, 500); // 播放 0.5 秒
-      } catch (e) {
-        console.log('無法播放音效', e);
-      }
-
-      if (count % 100 === 0) {
-        launchFireworks();
-        document.body.style.filter = 'none'; // 取消黑白
-      }
+    const sound = document.getElementById('shoutSound');
+    sound.addEventListener('loadedmetadata', () => {
+      if (sound.duration > 0.5) sound.currentTime = 0;
     });
 
-    // 彩色煙火（簡化版）
+    document.getElementById('shoutButton').addEventListener('click', () => {
+      count++;
+      total++;
+      document.getElementById('counter').innerText = '目前聲浪：' + count;
+      document.getElementById('total').innerText = '全球累積聲浪：' + total;
+      localStorage.setItem('shout_total', total);
+
+      try {
+        sound.pause();
+        sound.currentTime = 0;
+        sound.play();
+        setTimeout(() => sound.pause(), 500);
+      } catch (e) {
+        console.log('播放失敗', e);
+      }
+
+      if (count % 100 === 0) triggerFireworks();
+    });
+
+    // Fireworks
     const canvas = document.getElementById('fireworks');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    function launchFireworks() {
+    function randomColor() {
+      const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff'];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    function triggerFireworks() {
       let particles = [];
       for (let i = 0; i < 100; i++) {
         particles.push({
           x: canvas.width / 2,
           y: canvas.height / 2,
-          angle: Math.random() * 2 * Math.PI,
-          speed: Math.random() * 5 + 2,
-          radius: Math.random() * 4 + 1,
-          color: `hsl(${Math.random() * 360}, 100%, 50%)`,
-          life: 100
+          vx: (Math.random() - 0.5) * 10,
+          vy: (Math.random() - 0.5) * 10,
+          color: randomColor(),
+          alpha: 1
         });
       }
 
-      const interval = setInterval(() => {
+      let interval = setInterval(() => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         particles.forEach(p => {
-          p.x += Math.cos(p.angle) * p.speed;
-          p.y += Math.sin(p.angle) * p.speed;
-          p.life--;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI);
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= 0.02;
           ctx.fillStyle = p.color;
+          ctx.globalAlpha = Math.max(p.alpha, 0);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
           ctx.fill();
         });
-        particles = particles.filter(p => p.life > 0);
+        ctx.globalAlpha = 1;
+        particles = particles.filter(p => p.alpha > 0);
         if (particles.length === 0) clearInterval(interval);
-      }, 30);
+      }, 16);
     }
   </script>
 </body>
