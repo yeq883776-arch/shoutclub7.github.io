@@ -70,7 +70,7 @@
     <div id="energyBar"></div>
   </div>
 
-  <audio id="woodFishSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_41d48b3408.mp3" preload="auto"></audio>
+  <audio id="woodFishSound" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
 
   <canvas class="fireworks"></canvas>
 
@@ -134,9 +134,15 @@
       count++;
       localStorage.setItem('clickCount', count);
       updateDisplay();
-      woodFish.currentTime = 0;
-      woodFish.play().catch(e => {});
-      if (count === 100) {
+
+      try {
+        woodFish.currentTime = 0;
+        woodFish.play();
+      } catch (e) {
+        console.log('音效播放錯誤：', e);
+      }
+
+      if (count % 100 === 0) {
         playFireworks();
         drawFireworks();
       }
