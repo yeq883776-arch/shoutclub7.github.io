@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>釋放壓力能量站</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      text-align: center;
+      padding: 50px;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
+    #releaseBtn {
+      padding: 20px 40px;
+      font-size: 24px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #releaseBtn:hover {
+      background-color: #45a049;
+    }
+    #counter {
+      font-size: 28px;
+      margin: 30px 0;
+    }
+    #energyBarContainer {
+      width: 60%;
+      margin: 0 auto 20px;
+      background: #ddd;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    #energyBar {
+      height: 30px;
+      width: 0%;
+      background: linear-gradient(to right, #ff9800, #ffc107);
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎯 釋放你的壓力</h1>
+
+  <button id="releaseBtn">釋放一下！</button>
+
+  <div id="counter">已釋放壓力：0 次</div>
+
+  <div id="energyBarContainer">
+    <div id="energyBar"></div>
+  </div>
+
+  <!-- 音效來源 -->
+  <audio id="woodFishSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_41d48b3408.mp3" preload="auto"></audio>
+
+  <script>
+    let count = localStorage.getItem('clickCount') ? parseInt(localStorage.getItem('clickCount')) : 0;
+
+    const counterDisplay = document.getElementById('counter');
+    const energyBar = document.getElementById('energyBar');
+    const btn = document.getElementById('releaseBtn');
+    const woodFish = document.getElementById('woodFishSound');
+
+    function updateDisplay() {
+      counterDisplay.textContent = `已釋放壓力：${count} 次`;
+      const percent = Math.min(100, (count % 20) * 5);
+      energyBar.style.width = percent + '%';
+
+      if (percent === 100) {
+        setTimeout(() => alert("✨ 能量條滿囉！給自己一個擁抱 ✨"), 200);
+      }
+    }
+
+    btn.addEventListener('click', () => {
+      count++;
+      localStorage.setItem('clickCount', count);
+      updateDisplay();
+      woodFish.currentTime = 0;
+      woodFish.play(); // 播放敲木魚音效
+    });
+
+    updateDisplay();
+  </script>
+</body>
+</html>
