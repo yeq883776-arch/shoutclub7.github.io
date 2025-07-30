@@ -1,34 +1,43 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>釋放你的壓力</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      background: #000;
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
+      background-color: white;
       text-align: center;
+      font-family: 'Segoe UI', sans-serif;
+      margin-top: 50px;
     }
     h1 {
-      font-size: 2.5rem;
-      margin-top: 2rem;
+      font-size: 3em;
+      font-weight: bold;
     }
     #counter, #total {
-      font-size: 1.5rem;
-      margin: 1rem;
+      font-size: 1.5em;
+      margin: 10px;
     }
-    button {
-      margin-top: 2rem;
-      font-size: 2rem;
-      padding: 1rem 2rem;
+    #shoutBtn {
+      font-size: 2em;
+      padding: 15px 30px;
+      margin-top: 20px;
       cursor: pointer;
-      border: none;
-      border-radius: 10px;
-      background-color: #ff4444;
-      color: white;
+    }
+    #cccImg {
+      width: 200px;
+      margin: 30px auto;
+      transition: transform 0.2s ease;
+    }
+    .shake {
+      animation: shake 0.3s;
+    }
+    @keyframes shake {
+      0% { transform: rotate(0deg); }
+      25% { transform: rotate(5deg); }
+      50% { transform: rotate(-5deg); }
+      75% { transform: rotate(5deg); }
+      100% { transform: rotate(0deg); }
     }
     canvas {
       position: fixed;
@@ -42,82 +51,76 @@
   <h1>釋放你的壓力</h1>
   <div id="counter">目前聲浪：0</div>
   <div id="total">全球累積聲浪：0</div>
-  <button id="shoutButton">吶喊</button>
-  <canvas id="fireworks"></canvas>
+
+  <img id="cccImg" src="CCC.png" alt="CCC">
+
+  <button id="shoutBtn">吶喊</button>
 
   <audio id="shoutSound" src="cow.mp3"></audio>
+  <canvas id="fireworksCanvas"></canvas>
 
   <script>
+    const counterEl = document.getElementById('counter');
+    const totalEl = document.getElementById('total');
+    const shoutBtn = document.getElementById('shoutBtn');
+    const shoutSound = document.getElementById('shoutSound');
+    const cccImg = document.getElementById('cccImg');
+    const canvas = document.getElementById('fireworksCanvas');
+    const ctx = canvas.getContext('2d');
+
     let count = 0;
-    let total = localStorage.getItem('shout_total') || 0;
+    let total = parseInt(localStorage.getItem('totalShouts') || '0');
 
-    document.getElementById('total').innerText = '全球累積聲浪：' + total;
+    function updateDisplay() {
+      counterEl.innerText = `目前聲浪：${count}`;
+      totalEl.innerText = `全球累積聲浪：${total}`;
+    }
 
-    const sound = document.getElementById('shoutSound');
-    sound.addEventListener('loadedmetadata', () => {
-      if (sound.duration > 0.5) sound.currentTime = 0;
-    });
+    function playSound() {
+      shoutSound.currentTime = 0;
+      shoutSound.play();
+      setTimeout(() => shoutSound.pause(), 500);
+    }
 
-    document.getElementById('shoutButton').addEventListener('click', () => {
+    function triggerShake() {
+      cccImg.classList.add('shake');
+      setTimeout(() => cccImg.classList.remove('shake'), 300);
+    }
+
+    function launchFireworks() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      for (let i = 0; i < 100; i++) {
+        setTimeout(() => {
+          let x = Math.random() * canvas.width;
+          let y = Math.random() * canvas.height / 2;
+          let r = Math.random() * 3 + 2;
+          let color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+        }, i * 10);
+      }
+
+      setTimeout(() => ctx.clearRect(0, 0, canvas.width, canvas.height), 3000);
+    }
+
+    shoutBtn.addEventListener('click', () => {
       count++;
       total++;
-      document.getElementById('counter').innerText = '目前聲浪：' + count;
-      document.getElementById('total').innerText = '全球累積聲浪：' + total;
-      localStorage.setItem('shout_total', total);
+      localStorage.setItem('totalShouts', total);
+      updateDisplay();
+      playSound();
+      triggerShake();
 
-      try {
-        sound.pause();
-        sound.currentTime = 0;
-        sound.play();
-        setTimeout(() => sound.pause(), 500);
-      } catch (e) {
-        console.log('播放失敗', e);
+      if (count % 100 === 0) {
+        launchFireworks();
       }
-
-      if (count % 100 === 0) triggerFireworks();
     });
 
-    // Fireworks
-    const canvas = document.getElementById('fireworks');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    function randomColor() {
-      const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff'];
-      return colors[Math.floor(Math.random() * colors.length)];
-    }
-
-    function triggerFireworks() {
-      let particles = [];
-      for (let i = 0; i < 100; i++) {
-        particles.push({
-          x: canvas.width / 2,
-          y: canvas.height / 2,
-          vx: (Math.random() - 0.5) * 10,
-          vy: (Math.random() - 0.5) * 10,
-          color: randomColor(),
-          alpha: 1
-        });
-      }
-
-      let interval = setInterval(() => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.alpha -= 0.02;
-          ctx.fillStyle = p.color;
-          ctx.globalAlpha = Math.max(p.alpha, 0);
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
-          ctx.fill();
-        });
-        ctx.globalAlpha = 1;
-        particles = particles.filter(p => p.alpha > 0);
-        if (particles.length === 0) clearInterval(interval);
-      }, 16);
-    }
+    updateDisplay();
   </script>
 </body>
 </html>
