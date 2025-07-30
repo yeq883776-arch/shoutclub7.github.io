@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>釋放你的壓力</title>
   <style>
     html, body {
@@ -14,108 +14,84 @@
       filter: grayscale(100%);
     }
     h1 {
-      margin-top: 80px;
-      font-size: 36px;
-    }
-    button {
-      padding: 20px 40px;
-      font-size: 24px;
-      margin-top: 40px;
-      cursor: pointer;
+      margin-top: 20%;
+      font-size: 2em;
     }
     #countDisplay {
-      font-size: 18px;
-      margin-top: 20px;
+      font-size: 1.2em;
+      margin-top: 10px;
     }
     canvas {
       position: fixed;
-      pointer-events: none;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
   <h1>釋放你的壓力</h1>
-  <button id="clickButton">點我一下！</button>
-  <div id="countDisplay">今日點擊次數：0｜總計：0</div>
-  <audio id="clickSound" src="cow.mp3" preload="auto"></audio>
+  <div id="countDisplay">歷史累積點擊次數：0</div>
+
+  <audio id="sound" src="cow.mp3" preload="auto"></audio>
   <canvas id="fireworks"></canvas>
 
   <script>
     let clickCount = 0;
-    let totalCount = parseInt(localStorage.getItem('totalClickCount')) || 0;
-    const countDisplay = document.getElementById('countDisplay');
-    const clickSound = document.getElementById('clickSound');
-    const btn = document.getElementById('clickButton');
-    const canvas = document.getElementById('fireworks');
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    let totalCount = parseInt(localStorage.getItem("totalClickCount") || "0");
+    const audio = document.getElementById("sound");
+    const canvas = document.getElementById("fireworks");
+    const ctx = canvas.getContext("2d");
+    const countDisplay = document.getElementById("countDisplay");
 
     function updateDisplay() {
-      countDisplay.textContent = `今日點擊次數：${clickCount}｜總計：${totalCount}`;
+      countDisplay.textContent = `歷史累積點擊次數：${totalCount}`;
     }
 
-    function playSound() {
-      clickSound.currentTime = 0;
-      clickSound.play();
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
 
     function launchFireworks() {
+      const colors = ['#FF3', '#3F3', '#3FF', '#F3F', '#F33', '#0CF', '#FC0'];
       for (let i = 0; i < 100; i++) {
-        createParticle();
+        setTimeout(() => {
+          const x = Math.random() * canvas.width;
+          const y = Math.random() * canvas.height / 2;
+          const radius = Math.random() * 4 + 2;
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+          ctx.fill();
+        }, i * 10);
       }
     }
 
-    let particles = [];
-
-    function createParticle() {
-      const colors = ['#ff4b5c', '#4bffa5', '#4b8bff', '#f9ff4b', '#ff4bee'];
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height / 2,
-        radius: Math.random() * 3 + 2,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        dx: (Math.random() - 0.5) * 8,
-        dy: (Math.random() - 0.5) * 8,
-        life: 100
-      });
-    }
-
-    function animateFireworks() {
-      requestAnimationFrame(animateFireworks);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p, i) => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
-        p.x += p.dx;
-        p.y += p.dy;
-        p.life--;
-        if (p.life <= 0) particles.splice(i, 1);
-      });
-    }
-
-    animateFireworks();
-
-    btn.addEventListener('click', () => {
+    document.body.addEventListener("click", () => {
       clickCount++;
       totalCount++;
-      localStorage.setItem('totalClickCount', totalCount);
+      localStorage.setItem("totalClickCount", totalCount);
       updateDisplay();
-      playSound();
+
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      } catch (e) {
+        console.warn("播放失敗：", e);
+      }
+
       if (clickCount % 100 === 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         launchFireworks();
-        document.body.style.filter = "none"; // 取消黑白
+        document.body.style.filter = "none";
       }
     });
 
+    resizeCanvas();
     updateDisplay();
+    window.addEventListener("resize", resizeCanvas);
   </script>
 </body>
 </html>
